@@ -31,17 +31,15 @@
 #include <math.h>
 #include <mpi.h>
 
-#define DELTA 32
-
 void merge (int a[], int size, int temp[]);
 void bubble_sort (int a[], int size);
 void bubblesort_parallel_mpi (int a[], int size, int temp[],
            int level, int my_rank, int max_rank,
-           int tag, MPI_Comm comm);
+           int delta, int tag, MPI_Comm comm);
 int my_topmost_level_mpi (int my_rank);
-void run_root_mpi (int a[], int size, int temp[], int max_rank, int tag,
+void run_root_mpi (int a[], int size, int temp[], int max_rank, int delta, int tag,
        MPI_Comm comm);
-void run_helper_mpi (int my_rank, int max_rank, int tag, MPI_Comm comm);
+void run_helper_mpi (int my_rank, int max_rank, int delta, int tag, MPI_Comm comm);
 int main (int argc, char *argv[]);
 
 int
@@ -62,14 +60,15 @@ main (int argc, char *argv[])
     {				// Only root process sets test data 
       puts ("-MPI Parallel Bubble Sort-\t");
       // Check arguments
-      if (argc != 2)		/* argc must be 2 for proper execution! */
+      if (argc != 3)		/* argc must be 3 for proper execution! */
   {
-    printf ("Usage: %s array-size\n", argv[0]);
+    printf ("Usage: %s array-size delta\n", argv[0]);
     MPI_Abort (MPI_COMM_WORLD, 1);
   }
       // Get argument
       int size = atoi (argv[1]);	// Array size
-      printf ("Array size = %d\nProcesses = %d\n", size, comm_size);
+      int delta = atoi (argv[2]);	// Delta parameter
+      printf ("Array size = %d\nProcesses = %d\nDelta = %d\n", size, comm_size, delta);
       // Array allocation
       int *a = malloc (sizeof (int) * size);
       int *temp = malloc (sizeof (int) * size);
@@ -88,7 +87,7 @@ main (int argc, char *argv[])
       // Sort with root process
       double start, end;
       start = MPI_Wtime ();
-      run_root_mpi (a, size, temp, max_rank, tag, MPI_COMM_WORLD);
+      run_root_mpi (a, size, temp, max_rank, delta, tag, MPI_COMM_WORLD);
       end = MPI_Wtime ();
       printf ("Start = %.2f\nEnd = %.2f\nElapsed = %.2f\n",
         start, end, end - start);
@@ -104,8 +103,10 @@ main (int argc, char *argv[])
   }
     }				// Root process end
   else
-    {				// Helper processes  
-      run_helper_mpi (my_rank, max_rank, tag, MPI_COMM_WORLD);
+    {				// Helper processes
+      // Get delta parameter from argv
+      int delta = atoi (argv[2]);
+      run_helper_mpi (my_rank, max_rank, delta, tag, MPI_COMM_WORLD);
     }
   fflush (stdout);
   MPI_Finalize ();
@@ -114,7 +115,7 @@ main (int argc, char *argv[])
 
 // Root process code
 void
-run_root_mpi (int a[], int size, int temp[], int max_rank, int tag,
+run_root_mpi (int a[], int size, int temp[], int max_rank, int delta, int tag,
         MPI_Comm comm)
 {
   int my_rank;
@@ -126,14 +127,14 @@ run_root_mpi (int a[], int size, int temp[], int max_rank, int tag,
    my_rank);
       MPI_Abort (MPI_COMM_WORLD, 1);
     }
-  bubblesort_parallel_mpi (a, size, temp, 0, my_rank, max_rank, tag, comm);
+  bubblesort_parallel_mpi (a, size, temp, 0, my_rank, max_rank, delta, tag, comm);
   /* level=0; my_rank=root_rank=0; */
   return;
 }
 
 // Helper process code
 void
-run_helper_mpi (int my_rank, int max_rank, int tag, MPI_Comm comm)
+run_helper_mpi (int my_rank, int max_rank, int delta, int tag, MPI_Comm comm)
 {
   int level = my_topmost_level_mpi (my_rank);
   // probe for a message and determine its size and sender
@@ -146,7 +147,7 @@ run_helper_mpi (int my_rank, int max_rank, int tag, MPI_Comm comm)
   int *a = malloc (sizeof (int) * size);
   int *temp = malloc (sizeof (int) * size);
   MPI_Recv (a, size, MPI_INT, parent_rank, tag, comm, &status);
-  bubblesort_parallel_mpi (a, size, temp, level, my_rank, max_rank, tag, comm);
+  bubblesort_parallel_mpi (a, size, temp, level, my_rank, max_rank, delta, tag, comm);
   // Send sorted array to parent process
   MPI_Send (a, size, MPI_INT, parent_rank, tag, comm);
   return;
@@ -167,10 +168,10 @@ my_topmost_level_mpi (int my_rank)
 void
 bubblesort_parallel_mpi (int a[], int size, int temp[],
       int level, int my_rank, int max_rank,
-      int tag, MPI_Comm comm)
+      int delta, int tag, MPI_Comm comm)
 {
   int helper_rank = my_rank + pow (2, level);
-  if (helper_rank > max_rank || size <= DELTA)
+  if (helper_rank > max_rank || size <= delta)
     {				// no more processes available or size too small
       bubble_sort (a, size);
     }
@@ -184,7 +185,7 @@ bubblesort_parallel_mpi (int a[], int size, int temp[],
      comm, &request);
       // Sort first half
       bubblesort_parallel_mpi (a, size / 2, temp, level + 1, my_rank, max_rank,
-            tag, comm);
+            delta, tag, comm);
       // Free the async request (matching receive will complete the transfer).
       MPI_Request_free (&request);
       // Receive second half sorted

@@ -65,6 +65,6 @@ clean:
 	@- rm -f $(ALL) tags
 
 run: mpi_bubblesort
-	# mpirun -np 7 ./mpi_bubblesort 200000 28572
-	# mpirun -np 7 ./mpi_bubblesort 200000 20000
-	mpirun -np 4 ./mpi_bubblesort 200000 50000
+	# mpirun -np 7 ./mpi_bubblesort 200000
+	# mpirun -np 7 ./mpi_bubblesort 200000
+	mpirun -np 8 ./mpi_bubblesort 200000

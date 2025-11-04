@@ -11,7 +11,7 @@ clean:
 	rm -f $(TARGET)
 
 run: $(TARGET)
-	mpirun -np 7 ./$(TARGET) 200000 50000
+	mpirun -np 8 ./$(TARGET) 200000 1000
 
 .PHONY: all clean run
 
