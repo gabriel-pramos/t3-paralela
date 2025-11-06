@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
     } else {
         // Sou a raiz, mostro vetor
         end_time = MPI_Wtime();
-        Mostra(vetor, tam_vetor);
+        // Mostra(vetor, tam_vetor);
         printf("Execution time: %.6f seconds\n", end_time - start_time);
     }
     
