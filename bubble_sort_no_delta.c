@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <mpi.h>
 
+#define DELTA 32
+
 // Função para inicializar o vetor com números aleatórios
 void Inicializa(int *vetor, int tam) {
     srand(314159);
@@ -71,7 +73,6 @@ int main(int argc, char *argv[]) {
     int tam_vetor;
     int *vetor;
     int max_size = 0;
-    int delta = 0;
     MPI_Status status;
     double start_time, end_time;
     
@@ -80,8 +81,8 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
     
     // Root process: check arguments and get array size
-    if (argc != 3) {
-        printf("Usage: %s array-size delta\n", argv[0]);
+    if (argc != 2) {
+        printf("Usage: %s array-size\n", argv[0]);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     tam_vetor = atoi(argv[1]);
@@ -89,14 +90,9 @@ int main(int argc, char *argv[]) {
         printf("Error: array size must be positive\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-    delta = atoi(argv[2]);
-    if (delta <= 0) {
-        printf("Error: delta must be positive\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
     max_size = tam_vetor;
     if (my_rank == 0) {
-        printf("Array size = %d\nProcesses = %d\nDelta = %d\n", tam_vetor, num_procs, delta);
+        printf("Array size = %d\nProcesses = %d\n", tam_vetor, num_procs);
     }
     
     // Start timing on rank 0
@@ -129,9 +125,9 @@ int main(int argc, char *argv[]) {
     int filho_esquerda = 2 * my_rank + 1;
     int filho_direita = 2 * my_rank + 2;
     
-    if (tam_vetor <= delta || filho_direita >= num_procs) {
+    if (tam_vetor <= DELTA || filho_direita >= num_procs) {
         // Conquisto (vetor pequeno ou não tenho filhos disponíveis)
-        printf("Bubble sort called with size = %d\n on process %d\n", tam_vetor, my_rank);
+        printf("Bubble sort called with size = %d on process %d\n", tam_vetor, my_rank);
         BubbleSort(vetor, tam_vetor);
     } else {
         // Dividir
@@ -144,7 +140,9 @@ int main(int argc, char *argv[]) {
         MPI_Send(&vetor[metade], tam_vetor - metade, MPI_INT, filho_direita, 0, MPI_COMM_WORLD);
         
         // Recebe dos filhos
+        printf("Receiving from left child on process %d\n", my_rank);
         MPI_Recv(&vetor[0], metade, MPI_INT, filho_esquerda, 0, MPI_COMM_WORLD, &status);
+        printf("Receiving from right child on process %d\n", my_rank);
         MPI_Recv(&vetor[metade], tam_vetor - metade, MPI_INT, filho_direita, 0, MPI_COMM_WORLD, &status);
         
         // Intercala vetor inteiro

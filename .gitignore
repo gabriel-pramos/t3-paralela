@@ -37,3 +37,5 @@ omp_mergesort
 upc_omp_mergesort.upc
 serial_mergesort
 upc_serial_mergesort.upc
+bubble_sort
+bubble_sort_no_delta

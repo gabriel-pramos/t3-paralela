@@ -172,6 +172,14 @@ bubblesort_parallel_mpi (int a[], int size, int temp[],
   int helper_rank = my_rank + pow (2, level);
   if (helper_rank > max_rank || size <= DELTA)
     {				// no more processes available or size too small
+      // printf("Helper rank = %d\n", helper_rank);
+      // printf("Max rank = %d\n", max_rank);
+      // printf("Size = %d\n", size);
+      // printf("Level = %d\n", level);
+      // printf("My rank = %d\n", my_rank);
+      // printf("Tag = %d\n", tag);
+      // printf("Comm = %p\n", comm);
+      printf("Bubble sort called with size = %d\n", size);
       bubble_sort (a, size);
     }
   else
@@ -196,23 +204,17 @@ bubblesort_parallel_mpi (int a[], int size, int temp[],
   return;
 }
 
-void
-bubble_sort (int a[], int size)
-{
-  int i, j;
-  for (i = 0; i < size - 1; i++)
-    {
-      for (j = 0; j < size - i - 1; j++)
-  {
-    if (a[j] > a[j + 1])
-      {
-        // Swap elements
-        int temp = a[j];
-        a[j] = a[j + 1];
-        a[j + 1] = temp;
+void bubble_sort(int *vetor, int tam) {
+  int i, j, temp;
+  for (i = 0; i < tam - 1; i++) {
+      for (j = 0; j < tam - i - 1; j++) {
+          if (vetor[j] > vetor[j + 1]) {
+              temp = vetor[j];
+              vetor[j] = vetor[j + 1];
+              vetor[j + 1] = temp;
+          }
       }
   }
-    }
 }
 
 void

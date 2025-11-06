@@ -1,17 +1,10 @@
 CC = mpicc
-TARGET = bubble_sort
-SRC = bubble_sort.c
-
-all: $(TARGET)
-
-$(TARGET): $(SRC)
-	$(CC) -o $(TARGET) $(SRC)
+all: bubble_sort.c bubble_sort_no_delta.c
+	$(CC) -o bubble_sort bubble_sort.c -lm
+	$(CC) -o bubble_sort_no_delta bubble_sort_no_delta.c -lm
 
 clean:
-	rm -f $(TARGET)
+	rm -f bubble_sort bubble_sort_no_delta
 
-run: $(TARGET)
-	mpirun -np 8 ./$(TARGET) 200000 1000
-
-.PHONY: all clean run
+.PHONY: all clean
 
