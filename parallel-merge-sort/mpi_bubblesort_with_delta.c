@@ -171,8 +171,7 @@ bubblesort_parallel_mpi (int a[], int size, int temp[],
       int delta, int tag, MPI_Comm comm)
 {
   int helper_rank = my_rank + pow (2, level);
-  // if (helper_rank > max_rank || size <= delta)
-  if (size <= delta)
+  if (helper_rank > max_rank || size <= delta)
     {				// no more processes available or size too small
       bubble_sort (a, size);
     }
