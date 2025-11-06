@@ -33,13 +33,13 @@
 
 #define DELTA 32
 
-void merge (int a[], int size, int temp[]);
+void merge (int *vetor, int tam);
 void bubble_sort (int a[], int size);
-void bubblesort_parallel_mpi (int a[], int size, int temp[],
+void bubblesort_parallel_mpi (int a[], int size,
            int level, int my_rank, int max_rank,
            int tag, MPI_Comm comm);
 int my_topmost_level_mpi (int my_rank);
-void run_root_mpi (int a[], int size, int temp[], int max_rank, int tag,
+void run_root_mpi (int a[], int size, int max_rank, int tag,
        MPI_Comm comm);
 void run_helper_mpi (int my_rank, int max_rank, int tag, MPI_Comm comm);
 int main (int argc, char *argv[]);
@@ -72,8 +72,7 @@ main (int argc, char *argv[])
       printf ("Array size = %d\nProcesses = %d\n", size, comm_size);
       // Array allocation
       int *a = malloc (sizeof (int) * size);
-      int *temp = malloc (sizeof (int) * size);
-      if (a == NULL || temp == NULL)
+      if (a == NULL)
   {
     printf ("Error: Could not allocate array of size %d\n", size);
     MPI_Abort (MPI_COMM_WORLD, 1);
@@ -88,7 +87,7 @@ main (int argc, char *argv[])
       // Sort with root process
       double start, end;
       start = MPI_Wtime ();
-      run_root_mpi (a, size, temp, max_rank, tag, MPI_COMM_WORLD);
+      run_root_mpi (a, size, max_rank, tag, MPI_COMM_WORLD);
       end = MPI_Wtime ();
       printf ("Start = %.2f\nEnd = %.2f\nElapsed = %.2f\n",
         start, end, end - start);
@@ -114,7 +113,7 @@ main (int argc, char *argv[])
 
 // Root process code
 void
-run_root_mpi (int a[], int size, int temp[], int max_rank, int tag,
+run_root_mpi (int a[], int size, int max_rank, int tag,
         MPI_Comm comm)
 {
   int my_rank;
@@ -126,7 +125,7 @@ run_root_mpi (int a[], int size, int temp[], int max_rank, int tag,
    my_rank);
       MPI_Abort (MPI_COMM_WORLD, 1);
     }
-  bubblesort_parallel_mpi (a, size, temp, 0, my_rank, max_rank, tag, comm);
+  bubblesort_parallel_mpi (a, size, 0, my_rank, max_rank, tag, comm);
   /* level=0; my_rank=root_rank=0; */
   return;
 }
@@ -144,9 +143,8 @@ run_helper_mpi (int my_rank, int max_rank, int tag, MPI_Comm comm)
   int parent_rank = status.MPI_SOURCE;
   // allocate int a[size], temp[size] 
   int *a = malloc (sizeof (int) * size);
-  int *temp = malloc (sizeof (int) * size);
   MPI_Recv (a, size, MPI_INT, parent_rank, tag, comm, &status);
-  bubblesort_parallel_mpi (a, size, temp, level, my_rank, max_rank, tag, comm);
+  bubblesort_parallel_mpi (a, size, level, my_rank, max_rank, tag, comm);
   // Send sorted array to parent process
   MPI_Send (a, size, MPI_INT, parent_rank, tag, comm);
   return;
@@ -165,7 +163,7 @@ my_topmost_level_mpi (int my_rank)
 
 // MPI parallel bubble sort
 void
-bubblesort_parallel_mpi (int a[], int size, int temp[],
+bubblesort_parallel_mpi (int a[], int size,
       int level, int my_rank, int max_rank,
       int tag, MPI_Comm comm)
 {
@@ -191,7 +189,7 @@ bubblesort_parallel_mpi (int a[], int size, int temp[],
       MPI_Isend (a + size / 2, size - size / 2, MPI_INT, helper_rank, tag,
      comm, &request);
       // Sort first half
-      bubblesort_parallel_mpi (a, size / 2, temp, level + 1, my_rank, max_rank,
+      bubblesort_parallel_mpi (a, size / 2, level + 1, my_rank, max_rank,
             tag, comm);
       // Free the async request (matching receive will complete the transfer).
       MPI_Request_free (&request);
@@ -199,7 +197,7 @@ bubblesort_parallel_mpi (int a[], int size, int temp[],
       MPI_Recv (a + size / 2, size - size / 2, MPI_INT, helper_rank, tag,
     comm, &status);
       // Merge the two sorted sub-arrays through temp
-      merge (a, size, temp);
+      merge (a, size);
     }
   return;
 }
@@ -217,39 +215,35 @@ void bubble_sort(int *vetor, int tam) {
   }
 }
 
-void
-merge (int a[], int size, int temp[])
-{
-  int i1 = 0;
-  int i2 = size / 2;
-  int tempi = 0;
-  while (i1 < size / 2 && i2 < size)
-    {
-      if (a[i1] < a[i2])
-  {
-    temp[tempi] = a[i1];
-    i1++;
+void merge(int *vetor, int tam) {
+  int meio = tam / 2;
+  int *temp = (int *)malloc(tam * sizeof(int));
+  int i = 0, j = meio, k = 0;
+  
+  // Intercala as duas metades ordenadas
+  while (i < meio && j < tam) {
+      if (vetor[i] <= vetor[j]) {
+          temp[k++] = vetor[i++];
+      } else {
+          temp[k++] = vetor[j++];
+      }
   }
-      else
-  {
-    temp[tempi] = a[i2];
-    i2++;
+  
+  // Copia elementos restantes da primeira metade
+  while (i < meio) {
+      temp[k++] = vetor[i++];
   }
-      tempi++;
-    }
-  while (i1 < size / 2)
-    {
-      temp[tempi] = a[i1];
-      i1++;
-      tempi++;
-    }
-  while (i2 < size)
-    {
-      temp[tempi] = a[i2];
-      i2++;
-      tempi++;
-    }
-  // Copy sorted temp array into main array, a
-  memcpy (a, temp, size * sizeof (int));
+  
+  // Copia elementos restantes da segunda metade
+  while (j < tam) {
+      temp[k++] = vetor[j++];
+  }
+  
+  // Copia de volta para o vetor original
+  for (i = 0; i < tam; i++) {
+      vetor[i] = temp[i];
+  }
+  
+  free(temp);
 }
    
