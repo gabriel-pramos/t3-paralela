@@ -159,13 +159,6 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
   int helper_rank = my_rank + pow(2, level);
   if (helper_rank > max_rank ||
       size <= DELTA) { // no more processes available or size too small
-    // printf("Helper rank = %d\n", helper_rank);
-    // printf("Max rank = %d\n", max_rank);
-    // printf("Size = %d\n", size);
-    // printf("Level = %d\n", level);
-    // printf("My rank = %d\n", my_rank);
-    // printf("Tag = %d\n", tag);
-    // printf("Comm = %p\n", comm);
     printf("Bubble sort called with size = %d\n", size);
     double start = MPI_Wtime();
     bubble_sort(a, size);
@@ -173,19 +166,19 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
     printf("Bubble sort time: %.6f seconds\n", end - start);
   } else {
     // printf("Process %d has helper %d\n", my_rank, helper_rank);
-    MPI_Request request;
+    MPI_Request send_request;
     MPI_Status status;
     // Send second half, asynchronous
     MPI_Isend(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
-              &request);
-    // Sort first half
+              &send_request);
+    // Sort first half (in parallel with helper sorting second half)
     bubblesort_parallel_mpi(a, size / 2, level + 1, my_rank, max_rank, tag,
                             comm);
-    // Wait for send to complete before receiving
-    MPI_Wait(&request, &status);
     // Receive second half sorted
     MPI_Recv(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
              &status);
+    // Ensure send completed (should be done by now, but safe to check)
+    MPI_Wait(&send_request, &status);
     // Merge the two sorted sub-arrays through temp
     double start = MPI_Wtime();
     merge(a, size);
