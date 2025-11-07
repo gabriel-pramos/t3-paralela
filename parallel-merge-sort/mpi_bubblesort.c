@@ -165,7 +165,7 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
     double end = MPI_Wtime();
     printf("Bubble sort time: %.6f seconds\n", end - start);
   } else {
-    MPI_Request request;
+    // MPI_Request request;
     MPI_Status status;
     // Send second half, asynchronous
     // MPI_Isend(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
@@ -175,7 +175,7 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
     bubblesort_parallel_mpi(a, size / 2, level + 1, my_rank, max_rank, tag,
                             comm);
     // Free the async request (matching receive will complete the transfer).
-    MPI_Request_free(&request);
+    // MPI_Request_free(&request);
     // Receive second half sorted
     MPI_Recv(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
              &status);
