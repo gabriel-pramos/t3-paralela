@@ -20,7 +20,7 @@ SRC :=	hybrid_mergesort.c \
 	upc_mergesort.upc
 
 # ALL :=  $(foreach src,$(SRC),$(subst .upc,,$(subst .c,,$(src))))
-ALL :=  mpi_bubblesort mpi_bubblesort_with_delta mpi_bubblesort_before
+ALL :=  mpi_bubblesort mpi_bubblesort_with_delta mpi_bubblesort_before mpi_bubblesort_after
 
 default: $(ALL)
 
@@ -64,6 +64,9 @@ mpi_bubblesort_with_delta: mpi_bubblesort_with_delta.c
 	$(MPICC) $^ -o $@ -lm
 
 mpi_bubblesort_before: mpi_bubblesort_before.c
+	$(MPICC) $^ -o $@ -lm
+
+mpi_bubblesort_after: mpi_bubblesort_after.c
 	$(MPICC) $^ -o $@ -lm
 
 clean:
