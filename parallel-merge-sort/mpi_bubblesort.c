@@ -178,7 +178,10 @@ bubblesort_parallel_mpi (int a[], int size,
       // printf("Tag = %d\n", tag);
       // printf("Comm = %p\n", comm);
       printf("Bubble sort called with size = %d\n", size);
+      double start = MPI_Wtime();
       bubble_sort (a, size);
+      double end = MPI_Wtime();
+      printf("Bubble sort time: %.6f seconds\n", end - start);
     }
   else
     {
