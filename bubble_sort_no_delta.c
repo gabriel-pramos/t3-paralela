@@ -128,7 +128,10 @@ int main(int argc, char *argv[]) {
     if (tam_vetor <= DELTA || filho_direita >= num_procs) {
         // Conquisto (vetor pequeno ou não tenho filhos disponíveis)
         printf("Bubble sort called with size = %d on process %d\n", tam_vetor, my_rank);
+        double start = MPI_Wtime();
         BubbleSort(vetor, tam_vetor);
+        double end = MPI_Wtime();
+        printf("Bubble sort time: %.6f seconds\n", end - start);
     } else {
         // Dividir
         int metade = tam_vetor / 2;
