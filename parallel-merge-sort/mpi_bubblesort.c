@@ -167,11 +167,12 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
   } else {
     double start = MPI_Wtime();
     // printf("Process %d has helper %d\n", my_rank, helper_rank);
-    MPI_Request send_request;
+    // MPI_Request send_request;
     MPI_Status status;
     // Send second half, asynchronous
-    MPI_Isend(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
-              &send_request);
+    // MPI_Isend(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
+    //           &send_request);
+    MPI_Send(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm);
     // Sort first half (in parallel with helper sorting second half)
     bubblesort_parallel_mpi(a, size / 2, level + 1, my_rank, max_rank, tag,
                             comm);
