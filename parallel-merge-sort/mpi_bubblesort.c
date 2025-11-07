@@ -191,8 +191,8 @@ bubblesort_parallel_mpi (int a[], int size,
       // Sort first half
       bubblesort_parallel_mpi (a, size / 2, level + 1, my_rank, max_rank,
             tag, comm);
-      // Free the async request (matching receive will complete the transfer).
-      MPI_Request_free (&request);
+      // Wait for send to complete before receiving
+      MPI_Wait (&request, &status);
       // Receive second half sorted
       MPI_Recv (a + size / 2, size - size / 2, MPI_INT, helper_rank, tag,
     comm, &status);
