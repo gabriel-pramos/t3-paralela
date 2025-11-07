@@ -165,26 +165,22 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
     double end = MPI_Wtime();
     printf("Bubble sort time: %.6f seconds\n", end - start);
   } else {
-    double start = MPI_Wtime();
-    // printf("Process %d has helper %d\n", my_rank, helper_rank);
-    // MPI_Request send_request;
+    MPI_Request request;
     MPI_Status status;
     // Send second half, asynchronous
     // MPI_Isend(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
-    //           &send_request);
+    // &request);
     MPI_Send(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm);
-    // Sort first half (in parallel with helper sorting second half)
+    // Sort first half
     bubblesort_parallel_mpi(a, size / 2, level + 1, my_rank, max_rank, tag,
                             comm);
+    // Free the async request (matching receive will complete the transfer).
+    MPI_Request_free(&request);
     // Receive second half sorted
     MPI_Recv(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
              &status);
-    // Ensure send completed (should be done by now, but safe to check)
-    // MPI_Wait(&send_request, &status);
     // Merge the two sorted sub-arrays through temp
     merge(a, size);
-    double end = MPI_Wtime();
-    printf("Total parent time: %.6f seconds\n", end - start);
   }
   return;
 }
