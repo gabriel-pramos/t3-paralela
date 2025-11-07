@@ -178,12 +178,9 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
     MPI_Recv(a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm,
              &status);
     // Ensure send completed (should be done by now, but safe to check)
-    MPI_Wait(&send_request, &status);
+    // MPI_Wait(&send_request, &status);
     // Merge the two sorted sub-arrays through temp
-    double start = MPI_Wtime();
     merge(a, size);
-    double end = MPI_Wtime();
-    printf("Merge time: %.6f seconds\n", end - start);
   }
   return;
 }
