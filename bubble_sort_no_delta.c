@@ -143,13 +143,14 @@ int main(int argc, char *argv[]) {
         MPI_Send(&vetor[metade], tam_vetor - metade, MPI_INT, filho_direita, 0, MPI_COMM_WORLD);
         
         // Recebe dos filhos
-        printf("Receiving from left child on process %d\n", my_rank);
         MPI_Recv(&vetor[0], metade, MPI_INT, filho_esquerda, 0, MPI_COMM_WORLD, &status);
-        printf("Receiving from right child on process %d\n", my_rank);
         MPI_Recv(&vetor[metade], tam_vetor - metade, MPI_INT, filho_direita, 0, MPI_COMM_WORLD, &status);
         
         // Intercala vetor inteiro
+        double start = MPI_Wtime();
         Intercala(vetor, tam_vetor);
+        double end = MPI_Wtime();
+        printf("Intercalation time: %.6f seconds\n", end - start);
     }
     
     // Manda para o pai

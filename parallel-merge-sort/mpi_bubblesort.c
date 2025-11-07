@@ -189,18 +189,18 @@ bubblesort_parallel_mpi (int a[], int size,
       MPI_Request request;
       MPI_Status status;
       // Send second half, asynchronous
-      MPI_Isend (a + size / 2, size - size / 2, MPI_INT, helper_rank, tag,
-     comm, &request);
+      MPI_Isend (a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm, &request);
       // Sort first half
-      bubblesort_parallel_mpi (a, size / 2, level + 1, my_rank, max_rank,
-            tag, comm);
+      bubblesort_parallel_mpi (a, size / 2, level + 1, my_rank, max_rank, tag, comm);
       // Wait for send to complete before receiving
       MPI_Wait (&request, &status);
       // Receive second half sorted
-      MPI_Recv (a + size / 2, size - size / 2, MPI_INT, helper_rank, tag,
-    comm, &status);
+      MPI_Recv (a + size / 2, size - size / 2, MPI_INT, helper_rank, tag, comm, &status);
       // Merge the two sorted sub-arrays through temp
+      double start = MPI_Wtime();
       merge (a, size);
+      double end = MPI_Wtime();
+      printf("Merge time: %.6f seconds\n", end - start);
     }
   return;
 }
