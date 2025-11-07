@@ -165,6 +165,7 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
     double end = MPI_Wtime();
     printf("Bubble sort time: %.6f seconds\n", end - start);
   } else {
+    double start = MPI_Wtime();
     // printf("Process %d has helper %d\n", my_rank, helper_rank);
     MPI_Request send_request;
     MPI_Status status;
@@ -181,6 +182,8 @@ void bubblesort_parallel_mpi(int a[], int size, int level, int my_rank,
     // MPI_Wait(&send_request, &status);
     // Merge the two sorted sub-arrays through temp
     merge(a, size);
+    double end = MPI_Wtime();
+    printf("Total parent time: %.6f seconds\n", end - start);
   }
   return;
 }
